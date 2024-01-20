@@ -9,11 +9,72 @@ editor: visual
 
 ## Outline
 
-## Spatial transcriptomics (ST) technology
+## How to follow along
 
-## ST data processing
+## Review of Spatial transcriptomics (ST) technology
 
-## ST data format
+Many of the most popular technologies for ST can be divided into two groups:
+
+-   **Spot-based:** Next generation sequencing (NGS) with spatial barcoding
+
+-   **Molecule-based:** In-situ imaging of individual molecules
+
+FOOTNOTE REF
+
+## Spot-based: 10X Genomics Visium
+
+[10X Genomics Visium Youtube Video](https://www.youtube.com/watch?v=VwNk4d-0RJc)
+
+![](Fig/visium_tissue.png){fig-align="center" width="653"}
+
+![](Fig/visium_barcode.png){fig-align="center" width="418"}
+
+## Comparison
+
+|                          | Visium (Spot-based)                    | Molecule-based                                   |
+|--------------------------|----------------------------------------|--------------------------------------------------|
+| **Spatial Resolution**   | 10-50?? Cells per spot                 | Sub-cellular                                     |
+| **Number of genes**      | Whole transcriptome (20,000+)          | 100-10,000 (MERFISH)                             |
+| **Detection efficiency** | ?                                      | Extremely high                                   |
+| **Accessibility**        | Commercially available, raw data FASTQ | Raw images can be large and difficult to analyze |
+
+## Molecule-based: Small molecule fluorescence in situ hybridization (smFISH)
+
+-   Colored probes attach to mRNA transcript from a target gene.
+
+-   Quantify expression by imaging
+
+-   Key challenge is extending to many genes
+
+## Molecule-based: Multiplexed error robust FISH (MERFISH)
+
+MERFISH uses (error robust) combinatorial labeling to increase the number of gene transcripts that can be measured.
+
+Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be encoded and measured after $N$ sequential rounds of smFISH.
+
+![Source: Fig 1A of Chen et al. (2015). *Science*.](Fig/merfish.png){fig-align="center" width="528"}
+
+## Strengths and Limitations of Molecule-based approaches
+
+-   Sub-cellular resolution
+
+-   High detection efficiency
+
+-   Not truly transcriptome-wide
+
+-   Raw image files are large and can be more difficult to analyze
+
+## Most ST studies choose Visium
+
+## Most ST studies choose R
+
+# Spatial Transcriptomics Data Processing
+
+## Upstream data processing
+
+INSERT PACHTER FIG
+
+## Visium data format
 
 Once processed, ST data can be represented using two matrices.
 
@@ -27,7 +88,7 @@ FIG
 
 The `SpatialExperiment` package provides a container to store the count and coordinate matrix. ADD REF
 
-![](FIg/righelli_fig1.png){fig-align="center" width="460"}
+![](Fig/righelli_fig1.png){fig-align="center" width="460"}
 
 # Creating a SpatialExperiment object
 
@@ -59,7 +120,7 @@ For this workshop, we will download samples from human cerebral cortex:
 
 ## Downloading from the website
 
-The data can be downloaded by navigating to the website or directly from the terminal (unix):
+The data can be downloaded by navigating to the website or directly from the terminal (Unix):
 
 ```{zsh, echo=TRUE, eval=FALSE}
 mkdir cortex
@@ -116,7 +177,7 @@ spe <- SpatialExperiment(
 saveRDS(spe, file=file.path(dir,"spe.RDS"))
 ```
 
-## Plotting an image of the tissue
+## Plotting an image of the tissue {background-color="black"}
 
 ```{r}
 spe <- readRDS("./cortex/spe.RDS")
@@ -127,6 +188,7 @@ spe <- readRDS("./cortex/spe.RDS")
 
 ```{r}
 spi <- getImg(spe)
+par(bg = 'grey', mar=c(0,0,0,0))
 plot(as.raster(spi))
 ```
 
