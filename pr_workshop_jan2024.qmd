@@ -1,0 +1,387 @@
+---
+title: "Workshop on Analyzing Spatial Transcriptomics Data"
+author: "Phillip Nicol and Rafael Irizarry"
+format: revealjs
+editor: visual
+---
+
+# Introduction
+
+## Outline
+
+## Spatial transcriptomics (ST) technology
+
+## ST data processing
+
+## ST data format
+
+Once processed, ST data can be represented using two matrices.
+
+-   **Count matrix** $Y$: For each of $J$ spots record the number of reads from each of $I$ genes.
+
+-   **Coordinate matrix** $X$: For each of $J$ spots record the 2-dimensional spatial coordinate.
+
+FIG
+
+## Storing ST data in R
+
+The `SpatialExperiment` package provides a container to store the count and coordinate matrix. ADD REF
+
+![](FIg/righelli_fig1.png){fig-align="center" width="460"}
+
+# Creating a SpatialExperiment object
+
+## Installing and loading the SpatialExperiment package
+
+Install the package:
+
+```{r, eval=FALSE, echo=TRUE}
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("SpatialExperiment")
+```
+
+Load the package:
+
+```{r, echo=TRUE}
+library(SpatialExperiment)
+```
+
+## 10X genomics Visium data
+
+The [10X genomics website](https://www.10xgenomics.com) has example ST datasets.
+
+For this workshop, we will download samples from human cerebral cortex:
+
+![](FIg/10xgenomicexample.png){fig-align="center"}
+
+## Downloading from the website
+
+The data can be downloaded by navigating to the website or directly from the terminal (unix):
+
+```{zsh, echo=TRUE, eval=FALSE}
+mkdir cortex
+cd cortex 
+
+curl -O https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Human_Brain_Section_1/V1_Human_Brain_Section_1_raw_feature_bc_matrix.tar.gz
+
+curl -O https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Human_Brain_Section_1/V1_Human_Brain_Section_1_spatial.tar.gz
+
+tar xf V1_Human_Brain_Section_1_raw_feature_bc_matrix.tar.gz
+
+tar xf V1_Human_Brain_Section_1_spatial.tar.gz
+```
+
+## Creating the object
+
+```{r, echo=TRUE, eval=FALSE}
+dir <- "./cortex"
+
+### Step 1: Load the count matrix
+require(DropletUtils)
+fnm <- file.path(dir, "raw_feature_bc_matrix")
+sce <- DropletUtils::read10xCounts(fnm)
+
+### Step 2: Load the tissue image
+img <- readImgData(
+    path = file.path(dir, "spatial"),
+    sample_id = "brain")
+
+# Step 3: Read spatial coordinates
+fnm <- file.path(dir, "spatial", "tissue_positions_list.csv")
+xy <- read.csv(fnm, header = FALSE,
+    col.names = c(
+        "barcode", "in_tissue", "array_row", "array_col",
+        "pxl_row_in_fullres", "pxl_col_in_fullres"))
+ix <- match(sce$Barcode, xy$barcode) #Get cells in correct order
+xy <- xy[ix,]
+
+### Step 4: Construct feature metadata 
+require(S4Vectors)
+rd <- S4Vectors::DataFrame(
+    symbol = rowData(sce)$Symbol)
+
+### Step 5: Create the object
+spe <- SpatialExperiment(
+    assays = list(counts = assay(sce)),
+    rowData = rd, 
+    colData = DataFrame(xy), 
+    spatialCoordsNames = c("pxl_col_in_fullres", "pxl_row_in_fullres"),
+    imgData = img,
+    sample_id = "brain")
+
+### Step 6: Save the object 
+saveRDS(spe, file=file.path(dir,"spe.RDS"))
+```
+
+## Plotting an image of the tissue
+
+```{r}
+spe <- readRDS("./cortex/spe.RDS")
+```
+
+::: panel-tabset
+## Plot
+
+```{r}
+spi <- getImg(spe)
+plot(as.raster(spi))
+```
+
+## Code
+
+```{r, echo=TRUE, eval=FALSE}
+spi <- getImg(spe)
+plot(as.raster(spi))
+```
+:::
+
+## Removing spots not in the tissue
+
+::: panel-tabset
+## Plot
+
+```{r}
+require(ggplot2)
+spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
+
+df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2])
+p <- ggplot(df,aes(x=x,y=y)) + geom_point(size=0.05)
+p <- p + theme_bw()
+p
+```
+
+## Code
+
+```{r, echo=TRUE, eval=FALSE}
+require(ggplot2)
+spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
+
+df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2])
+p <- ggplot(df,aes(x=x,y=y)) + geom_point(size=0.05)
+p <- p + theme_bw()
+p
+```
+:::
+
+## More example ST data
+
+For additional examples of data in the `SpatialExperiment` format, a good package is `STexampleData` :
+
+```{r, echo=TRUE, eval=FALSE}
+BiocManager::install("STexampleData")
+
+### Example dataset 
+spe2 <- STexampleData::ST_mouseOB()
+```
+
+# Finding Spatially Variable Genes
+
+## What is a spatially variable gene (SVG)?
+
+A spatially variable gene (SVG) is a gene whose expression differs significantly from a uniform distribution. Here are some examples of SVGs that were reported by REF in the human brain:
+
+```{r, eval=FALSE}
+library(biomaRt)
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+genes <- rownames(spe)
+G_list <- getBM(filters="ensembl_gene_id",
+                attributes= c("ensembl_gene_id","hgnc_symbol"),
+                values=genes,
+                mart=mart)
+no.match <- which(G_list$hgnc_symbol == "")
+G_list[no.match,2] <- G_list[no.match,1]
+ix <- match(G_list$ensembl_gene_id, rownames(spe))
+rownames(spe)[ix] <- G_list$hgnc_symbol
+interesting_genes <- which(rownames(spe) %in% c("MOBP","PCP4", "SNAP25","NPY"))
+
+
+library(scran)
+spe <- logNormCounts(spe)
+
+Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
+
+## Switch rows and columns and make dataframe 
+df <- as.data.frame(t(Y.sub))
+
+## Add spatial coordinates 
+df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
+
+library(reshape2)
+df <- melt(df, id.vars=c("x","y"))
+saveRDS(df, file="./analysis/svgplot_df.RDS")
+saveRDS(spe, file=file.path("./cortex/spe_p2.RDS"))
+```
+
+```{r}
+df <- readRDS(file="./analysis/svgplot_df.RDS")
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,3,6))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+p
+```
+
+## Exercise: Plot the genes from the previous figure
+
+We are going to try to recreate the figure from the previous slide using the dataset that we downloaded earlier.
+
+**Problem:** Instead of gene symbols we are given ENSEMBL ID:
+
+```{r, echo=TRUE}
+head(rownames(spe))
+```
+
+## Exercise
+
+::: panel-tabset
+## Step 1
+
+```{r, echo=TRUE, eval=FALSE}
+### Convert ENSEMBL ID to gene symbol
+require(biomaRt)
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+genes <- rownames(spe)
+G_list <- getBM(filters="ensembl_gene_id",
+                attributes= c("ensembl_gene_id","hgnc_symbol"),
+                values=genes,
+                mart=mart)
+no.match <- which(G_list$hgnc_symbol == "")
+G_list[no.match,2] <- G_list[no.match,1]
+ix <- match(G_list$ensembl_gene_id, rownames(spe))
+rownames(spe)[ix] <- G_list$hgnc_symbol
+interesting_genes <- which(rownames(spe) %in% c("MOBP","PCP4", "SNAP25","NPY"))
+```
+
+## Step 2
+
+```{r, echo=TRUE, eval=FALSE}
+### Normalize count matrix and subset to interesting genes
+require(scran)
+spe <- logNormCounts(spe)
+
+Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
+
+## Switch rows and columns and make dataframe 
+df <- as.data.frame(t(Y.sub))
+
+## Add spatial coordinates 
+df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
+```
+
+## Step 3
+
+```{r, echo=TRUE, eval=FALSE}
+### Construct plot
+require(reshape2)
+df <- melt(df, id.vars=c("x","y"))
+
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,3,6))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+```
+
+## Final Plot
+
+```{r, echo=FALSE}
+df <- readRDS(file="./analysis/svgplot_df.RDS")
+
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,3,6))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+p
+```
+:::
+
+## Finding SVGs automatically
+
+```{r}
+spe <- readRDS("./cortex/spe_p2.RDS")
+```
+
+```{r, echo=TRUE}
+library(SPARK)
+
+## Remove mitochondrial genes
+mito.genes <- which(grepl("^MT-",rownames(spe)))
+spe <- spe[-mito.genes,]
+
+res <- sparkx(
+    count_in = counts(spe)[rowSums(counts(spe)) > 10,], 
+    locus_in = spatialCoords(spe), 
+    X_in = NULL, 
+    numCores = 1, 
+    option = "mixture", 
+    verbose = TRUE)
+```
+
+## Plotting genes with the smallest p-values
+
+```{r}
+interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval)[1:10]]
+
+require(scran)
+spe <- logNormCounts(spe)
+
+Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
+
+## Switch rows and columns and make dataframe 
+df <- as.data.frame(t(Y.sub))
+
+## Add spatial coordinates 
+df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
+
+### Construct plot
+require(reshape2)
+df <- melt(df, id.vars=c("x","y"))
+
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,4,8))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+p
+```
+
+# Clustering and cell type identification
+
+## References

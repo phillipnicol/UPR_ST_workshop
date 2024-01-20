@@ -1,0 +1,10 @@
+
+.DS_Store
+*.gz
+*.RDS
+*.json
+cortex/spatial/aligned_fiducials.jpg
+cortex/spatial/detected_tissue_image.jpg
+cortex/spatial/tissue_hires_image.png
+cortex/spatial/tissue_lowres_image.png
+cortex/spatial/tissue_positions_list.csv
