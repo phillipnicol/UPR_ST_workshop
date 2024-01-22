@@ -8,7 +8,7 @@
 <link href="pr_workshop_jan2024_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="pr_workshop_jan2024_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="pr_workshop_jan2024_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.3.450">
+  <meta name="generator" content="quarto-1.3.353">
 
   <meta name="author" content="Phillip Nicol and Rafael Irizarry">
   <title>Workshop on Analyzing Spatial Transcriptomics Data</title>
@@ -435,22 +435,19 @@ Phillip Nicol and Rafael Irizarry
 </figure>
 </div>
 </section>
-<section id="strengths-and-limitations-of-visium" class="slide level2">
-<h2>Strengths and Limitations of Visium</h2>
-<ul>
-<li><p>Visium can profile the entire transcriptome (all genes).</p></li>
-<li><p>Visium is commercially available (10X genomics) and the raw data (FASTQ) files are relatively easy to process.</p></li>
-<li><p>Not single-cell resolution. Spots can contain a mixture of many cells.</p></li>
-</ul>
-<p>MOSES AND PACHTER</p>
-</section>
-<section id="molecule-based-small-molecule-fluorescence-in-situ-hybridization-smfish" class="slide level2">
+<section id="molecule-based-small-molecule-fluorescence-in-situ-hybridization-smfish" class="slide level2 smaller">
 <h2>Molecule-based: Small molecule fluorescence in situ hybridization (smFISH)</h2>
 <ul>
 <li><p>Colored probes attach to mRNA transcript from a target gene.</p></li>
 <li><p>Quantify expression by imaging</p></li>
 <li><p>Key challenge is extending to many genes</p></li>
 </ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Fig/smFISH_example.png" width="248" height="215"></p>
+<figcaption>Source: Figure 4A of Ni and Oudenaarden</figcaption>
+</figure>
+</div>
 </section>
 <section id="molecule-based-multiplexed-error-robust-fish-merfish" class="slide level2">
 <h2>Molecule-based: Multiplexed error robust FISH (MERFISH)</h2>
@@ -458,21 +455,55 @@ Phillip Nicol and Rafael Irizarry
 <p>Basic idea: assign a <span class="math inline">\(N\)</span>-bit binary string to each gene. Then <span class="math inline">\(2^N\)</span> genes can be encoded and measured after <span class="math inline">\(N\)</span> sequential rounds of smFISH.</p>
 
 <img data-src="Fig/merfish.png" width="528" class="r-stretch quarto-figure-center"><p class="caption">Source: Fig 1A of Chen et al.&nbsp;(2015). <em>Science</em>.</p></section>
-<section id="strengths-and-limitations-of-molecule-based-approaches" class="slide level2">
-<h2>Strengths and Limitations of Molecule-based approaches</h2>
-<ul>
-<li><p>Sub-cellular resolution</p></li>
-<li><p>High detection efficiency</p></li>
-<li><p>Not truly transcriptome-wide</p></li>
-<li><p>Raw image files are large and can be more difficult to analyze</p></li>
-</ul>
+<section id="comparison" class="slide level2">
+<h2>Comparison</h2>
+<div style="font-size: 80%;">
+<table>
+<colgroup>
+<col style="width: 26%">
+<col style="width: 33%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Visium (Spot-based)</th>
+<th>Molecule-based</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Spatial Resolution</strong></td>
+<td><span style="color:red;">1-10 cells per spot</span></td>
+<td><span style="color:green;">sub-cellular</span></td>
+</tr>
+<tr class="even">
+<td><strong>Number of genes</strong></td>
+<td><span style="color:green;">Whole transcriptome (20,000+)</span></td>
+<td><span style="color:red;">100-10,000 (MERFISH)</span></td>
+</tr>
+<tr class="odd">
+<td><strong>Detection efficiency</strong></td>
+<td><span style="color:red;">~15%</span></td>
+<td><span style="color:green;">~95%</span></td>
+</tr>
+<tr class="even">
+<td><strong>Accessibility</strong></td>
+<td><span style="color:green;">Commercially available; raw data FASTQ</span></td>
+<td><span style="color:red;">Raw images can be large and difficult to analyze</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 <section id="most-st-studies-choose-visium" class="slide level2">
 <h2>Most ST studies choose Visium</h2>
-</section>
+
+<img data-src="Fig/institutions.png" width="326" class="r-stretch quarto-figure-center"><p class="caption">Moses and Pachter (2022). Nature Methods.</p></section>
 <section id="most-st-studies-choose-r" class="slide level2">
 <h2>Most ST studies choose R</h2>
-</section></section>
+
+<img data-src="Fig/programming_language.png" class="r-stretch quarto-figure-center"><p class="caption">Moses and Pachter (2022). Nature Methods.</p></section></section>
 <section>
 <section id="spatial-transcriptomics-data-processing" class="title-slide slide level1 center">
 <h1>Spatial Transcriptomics Data Processing</h1>
@@ -480,8 +511,8 @@ Phillip Nicol and Rafael Irizarry
 </section>
 <section id="upstream-data-processing" class="slide level2">
 <h2>Upstream data processing</h2>
-<p>INSERT PACHTER FIG</p>
-</section>
+
+<img data-src="Fig/upstream.png" class="r-stretch quarto-figure-center"><p class="caption">Moses and Pachter (2022). Nature Methods.</p></section>
 <section id="visium-data-format" class="slide level2">
 <h2>Visium data format</h2>
 <p>Once processed, ST data can be represented using two matrices.</p>
@@ -537,8 +568,8 @@ Phillip Nicol and Rafael Irizarry
 <span id="cb3-10"><a href="#cb3-10"></a><span class="fu">tar</span> xf V1_Human_Brain_Section_1_spatial.tar.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="creating-the-object" class="slide level2">
-<h2>Creating the object</h2>
+<section id="exercise-creating-the-object" class="slide level2">
+<h2>Exercise: Creating the object</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>dir <span class="ot">&lt;-</span> <span class="st">"./cortex"</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a></span>
@@ -587,7 +618,7 @@ Phillip Nicol and Rafael Irizarry
 <div id="tabset-1-1">
 <div class="cell">
 <div class="cell-output-display">
-<p><img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-6-1.png" width="960"></p>
+<p><img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-7-1.png" width="960"></p>
 </div>
 </div>
 </div>
@@ -608,19 +639,23 @@ Phillip Nicol and Rafael Irizarry
 <div id="tabset-2-1">
 <div class="cell">
 <div class="cell-output-display">
-<p><img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-8-1.png" width="960"></p>
+<p><img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-9-1.png" width="960"></p>
 </div>
 </div>
 </div>
 <div id="tabset-2-2">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">require</span>(ggplot2)</span>
-<span id="cb6-2"><a href="#cb6-2"></a>spe <span class="ot">&lt;-</span> spe[,spe<span class="sc">$</span>in_tissue <span class="sc">==</span> <span class="dv">1</span>] <span class="co">#This is how you subset by spots/samples</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a></span>
-<span id="cb6-4"><a href="#cb6-4"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x=</span><span class="fu">spatialCoords</span>(spe)[,<span class="dv">1</span>], <span class="at">y=</span><span class="fu">spatialCoords</span>(spe)[,<span class="dv">2</span>])</span>
-<span id="cb6-5"><a href="#cb6-5"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df,<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.05</span>)</span>
-<span id="cb6-6"><a href="#cb6-6"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme_bw</span>()</span>
-<span id="cb6-7"><a href="#cb6-7"></a>p</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x=</span><span class="fu">spatialCoords</span>(spe)[,<span class="dv">1</span>], <span class="at">y=</span><span class="fu">spatialCoords</span>(spe)[,<span class="dv">2</span>],</span>
+<span id="cb6-4"><a href="#cb6-4"></a>                 <span class="at">in_tissue=</span><span class="fu">as.character</span>(spe<span class="sc">$</span>in_tissue))</span>
+<span id="cb6-5"><a href="#cb6-5"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df,<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y,<span class="at">color=</span>in_tissue))<span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.25</span>)<span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">"grey"</span>, <span class="st">"red"</span>))<span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>  <span class="fu">theme_bw</span>()</span>
+<span id="cb6-9"><a href="#cb6-9"></a>p</span>
+<span id="cb6-10"><a href="#cb6-10"></a></span>
+<span id="cb6-11"><a href="#cb6-11"></a>spe <span class="ot">&lt;-</span> spe[,spe<span class="sc">$</span>in_tissue <span class="sc">==</span> <span class="dv">1</span>] <span class="co">#This is how you subset by spots/samples</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -643,12 +678,17 @@ Phillip Nicol and Rafael Irizarry
 </section>
 <section id="what-is-a-spatially-variable-gene-svg" class="slide level2">
 <h2>What is a spatially variable gene (SVG)?</h2>
-<p>A spatially variable gene (SVG) is a gene whose expression differs significantly from a uniform distribution. Here are some examples of SVGs that were reported by REF in the human brain:</p>
-
-<img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-12-1.png" width="960" class="r-stretch"></section>
-<section id="exercise-plot-the-genes-from-the-previous-figure" class="slide level2">
-<h2>Exercise: Plot the genes from the previous figure</h2>
-<p>We are going to try to recreate the figure from the previous slide using the dataset that we downloaded earlier.</p>
+<p>A spatially variable gene is one whose expression depends on spatial location</p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Fig/SVG_example.png" width="718" height="202"></p>
+<figcaption>Source: REF</figcaption>
+</figure>
+</div>
+</section>
+<section id="exercise-plotting-spatially-variable-genes" class="slide level2">
+<h2>Exercise: Plotting spatially variable genes</h2>
+<p>In the human cerebral cortex, the genes <em>MOBP, NPY, SNAP25,</em> and <em>PCP4</em> were previously reported by REF to be spatially variable. We will verify this by plotting.</p>
 <p><strong>Problem:</strong> Instead of gene symbols we are given ENSEMBL ID:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">head</span>(<span class="fu">rownames</span>(spe))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -658,8 +698,8 @@ Phillip Nicol and Rafael Irizarry
 </div>
 </div>
 </section>
-<section id="exercise" class="slide level2">
-<h2>Exercise</h2>
+<section id="exercise-plotting-svgs" class="slide level2">
+<h2>Exercise: Plotting SVGs</h2>
 <div class="panel-tabset">
 <ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Step 1</a></li><li><a href="#tabset-3-2">Step 2</a></li><li><a href="#tabset-3-3">Step 3</a></li><li><a href="#tabset-3-4">Final Plot</a></li></ul>
 <div class="tab-content">
@@ -709,11 +749,12 @@ Phillip Nicol and Rafael Irizarry
 <span id="cb12-10"><a href="#cb12-10"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">nrow=</span><span class="dv">2</span>)</span>
 <span id="cb12-11"><a href="#cb12-11"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme_bw</span>()</span>
 <span id="cb12-12"><a href="#cb12-12"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">guides</span>(<span class="at">color =</span> <span class="fu">guide_colorbar</span>(<span class="at">ticks =</span> <span class="cn">FALSE</span>)) </span>
-<span id="cb12-13"><a href="#cb12-13"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"italic"</span>), </span>
-<span id="cb12-14"><a href="#cb12-14"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(), </span>
-<span id="cb12-15"><a href="#cb12-15"></a>        <span class="at">axis.title =</span> <span class="fu">element_blank</span>(), </span>
-<span id="cb12-16"><a href="#cb12-16"></a>        <span class="at">axis.text =</span> <span class="fu">element_blank</span>(), </span>
-<span id="cb12-17"><a href="#cb12-17"></a>        <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-13"><a href="#cb12-13"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">color=</span><span class="st">"log count"</span>)</span>
+<span id="cb12-14"><a href="#cb12-14"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"italic"</span>), </span>
+<span id="cb12-15"><a href="#cb12-15"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb12-16"><a href="#cb12-16"></a>        <span class="at">axis.title =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb12-17"><a href="#cb12-17"></a>        <span class="at">axis.text =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb12-18"><a href="#cb12-18"></a>        <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-3-4">
@@ -728,50 +769,114 @@ Phillip Nicol and Rafael Irizarry
 </section>
 <section id="finding-svgs-automatically" class="slide level2">
 <h2>Finding SVGs automatically</h2>
+<ul>
+<li><p>A statistical method can automatically identify spatially variable genes without relying on previous knowledge.</p></li>
+<li><p>There are several existing methods, but it is still an area of active research.</p></li>
+</ul>
+</section>
+<section id="spark-x" class="slide level2">
+<h2>SPARK-X</h2>
+<p>METHOD OVERVIEW</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">library</span>(SPARK)</span>
-<span id="cb13-2"><a href="#cb13-2"></a></span>
-<span id="cb13-3"><a href="#cb13-3"></a><span class="do">## Remove mitochondrial genes</span></span>
-<span id="cb13-4"><a href="#cb13-4"></a>mito.genes <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">grepl</span>(<span class="st">"^MT-"</span>,<span class="fu">rownames</span>(spe)))</span>
-<span id="cb13-5"><a href="#cb13-5"></a>spe <span class="ot">&lt;-</span> spe[<span class="sc">-</span>mito.genes,]</span>
-<span id="cb13-6"><a href="#cb13-6"></a></span>
-<span id="cb13-7"><a href="#cb13-7"></a>res <span class="ot">&lt;-</span> <span class="fu">sparkx</span>(</span>
-<span id="cb13-8"><a href="#cb13-8"></a>    <span class="at">count_in =</span> <span class="fu">counts</span>(spe)[<span class="fu">rowSums</span>(<span class="fu">counts</span>(spe)) <span class="sc">&gt;</span> <span class="dv">10</span>,], </span>
-<span id="cb13-9"><a href="#cb13-9"></a>    <span class="at">locus_in =</span> <span class="fu">spatialCoords</span>(spe), </span>
-<span id="cb13-10"><a href="#cb13-10"></a>    <span class="at">X_in =</span> <span class="cn">NULL</span>, </span>
-<span id="cb13-11"><a href="#cb13-11"></a>    <span class="at">numCores =</span> <span class="dv">1</span>, </span>
-<span id="cb13-12"><a href="#cb13-12"></a>    <span class="at">option =</span> <span class="st">"mixture"</span>, </span>
-<span id="cb13-13"><a href="#cb13-13"></a>    <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>## ===== SPARK-X INPUT INFORMATION ==== 
-## number of total samples: 4992 
-## number of total genes: 18653 
-## Running with single core, may take some time 
-## Testing With Projection Kernel
-## Testing With Gaussian Kernel 1
-## Testing With Gaussian Kernel 2
-## Testing With Gaussian Kernel 3
-## Testing With Gaussian Kernel 4
-## Testing With Gaussian Kernel 5
-## Testing With Cosine Kernel 1
-## Testing With Cosine Kernel 2
-## Testing With Cosine Kernel 3
-## Testing With Cosine Kernel 4
-## Testing With Cosine Kernel 5</code></pre>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">install.packages</span>(<span class="st">'devtools'</span>) <span class="co">#If not already installed</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">'xzhoulab/SPARK'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="running-spark-x" class="slide level2">
+<h2>Running SPARK-X</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">require</span>(SPARK)</span>
+<span id="cb14-2"><a href="#cb14-2"></a></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="do">## Remove mitochondrial genes</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>mito.genes <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">grepl</span>(<span class="st">"^MT-"</span>,<span class="fu">rownames</span>(spe)))</span>
+<span id="cb14-5"><a href="#cb14-5"></a>spe <span class="ot">&lt;-</span> spe[<span class="sc">-</span>mito.genes,]</span>
+<span id="cb14-6"><a href="#cb14-6"></a></span>
+<span id="cb14-7"><a href="#cb14-7"></a>res <span class="ot">&lt;-</span> <span class="fu">sparkx</span>(</span>
+<span id="cb14-8"><a href="#cb14-8"></a>    <span class="at">count_in =</span> <span class="fu">counts</span>(spe)[<span class="fu">rowSums</span>(<span class="fu">counts</span>(spe)) <span class="sc">&gt;</span> <span class="dv">10</span>,], </span>
+<span id="cb14-9"><a href="#cb14-9"></a>    <span class="at">locus_in =</span> <span class="fu">spatialCoords</span>(spe), </span>
+<span id="cb14-10"><a href="#cb14-10"></a>    <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="genes-with-the-smallest-p-values" class="slide level2">
+<h2>Genes with the smallest p-values</h2>
+<div class="panel-tabset">
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Plot</a></li><li><a href="#tabset-4-2">Code</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1">
+<div class="cell">
+<div class="cell-output-display">
+<p><img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-21-1.png" width="960"></p>
+</div>
+</div>
+</div>
+<div id="tabset-4-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">require</span>(scran)</span>
+<span id="cb15-2"><a href="#cb15-2"></a>interesting_genes <span class="ot">&lt;-</span> <span class="fu">rownames</span>(res<span class="sc">$</span>res_mtest)[<span class="fu">order</span>(res<span class="sc">$</span>res_mtest<span class="sc">$</span>combinedPval)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]]</span>
+<span id="cb15-3"><a href="#cb15-3"></a></span>
+<span id="cb15-4"><a href="#cb15-4"></a>spe <span class="ot">&lt;-</span> <span class="fu">logNormCounts</span>(spe)</span>
+<span id="cb15-5"><a href="#cb15-5"></a></span>
+<span id="cb15-6"><a href="#cb15-6"></a>Y.sub <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">logcounts</span>(spe)[interesting_genes,])</span>
+<span id="cb15-7"><a href="#cb15-7"></a></span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="do">## Switch rows and columns and make dataframe </span></span>
+<span id="cb15-9"><a href="#cb15-9"></a>df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">t</span>(Y.sub))</span>
+<span id="cb15-10"><a href="#cb15-10"></a></span>
+<span id="cb15-11"><a href="#cb15-11"></a><span class="do">## Add spatial coordinates </span></span>
+<span id="cb15-12"><a href="#cb15-12"></a>df<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">spatialCoords</span>(spe)[,<span class="dv">1</span>]; df<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="fu">spatialCoords</span>(spe)[,<span class="dv">2</span>]</span>
+<span id="cb15-13"><a href="#cb15-13"></a></span>
+<span id="cb15-14"><a href="#cb15-14"></a><span class="do">### Construct plot</span></span>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="fu">require</span>(reshape2)</span>
+<span id="cb15-16"><a href="#cb15-16"></a>df <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, <span class="at">id.vars=</span><span class="fu">c</span>(<span class="st">"x"</span>,<span class="st">"y"</span>))</span>
+<span id="cb15-17"><a href="#cb15-17"></a></span>
+<span id="cb15-18"><a href="#cb15-18"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data=</span>df,<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y,<span class="at">color=</span>value)) </span>
+<span id="cb15-19"><a href="#cb15-19"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size=</span><span class="fl">0.05</span>) </span>
+<span id="cb15-20"><a href="#cb15-20"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">coord_fixed</span>()</span>
+<span id="cb15-21"><a href="#cb15-21"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">scale_color_gradientn</span>(<span class="at">colors=</span><span class="fu">c</span>(<span class="st">"gray90"</span>,<span class="st">"blue"</span>,<span class="st">"black"</span>),</span>
+<span id="cb15-22"><a href="#cb15-22"></a>                              <span class="at">breaks=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">4</span>,<span class="dv">8</span>))</span>
+<span id="cb15-23"><a href="#cb15-23"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb15-24"><a href="#cb15-24"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme_bw</span>()</span>
+<span id="cb15-25"><a href="#cb15-25"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">guides</span>(<span class="at">color =</span> <span class="fu">guide_colorbar</span>(<span class="at">ticks =</span> <span class="cn">FALSE</span>)) </span>
+<span id="cb15-26"><a href="#cb15-26"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">color=</span><span class="st">"log count"</span>)</span>
+<span id="cb15-27"><a href="#cb15-27"></a>p <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"italic"</span>), </span>
+<span id="cb15-28"><a href="#cb15-28"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb15-29"><a href="#cb15-29"></a>        <span class="at">axis.title =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb15-30"><a href="#cb15-30"></a>        <span class="at">axis.text =</span> <span class="fu">element_blank</span>(), </span>
+<span id="cb15-31"><a href="#cb15-31"></a>        <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb15-32"><a href="#cb15-32"></a>p</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
 </div>
 </div>
 </section>
-<section id="plotting-genes-with-the-smallest-p-values" class="slide level2">
-<h2>Plotting genes with the smallest p-values</h2>
+<section id="plotting-genes-with-the-largest-p-values-least-spatially-variable" class="slide level2">
+<h2>Plotting genes with the largest p-values (least spatially variable)</h2>
 
-<img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-20-1.png" width="960" class="r-stretch"></section></section>
+<img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-23-1.png" width="960" class="r-stretch"></section></section>
 <section>
 <section id="clustering-and-cell-type-identification" class="title-slide slide level1 center">
 <h1>Clustering and cell type identification</h1>
 
 </section>
+<section id="dimension-reduction" class="slide level2">
+<h2>Dimension reduction</h2>
+</section>
+<section id="running-pca" class="slide level2">
+<h2>Running PCA</h2>
+</section>
+<section id="plotting-top-3-pcs" class="slide level2">
+<h2>Plotting top 3 PCs</h2>
+
+<img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-25-1.png" width="960" class="r-stretch"></section>
+<section id="clustering" class="slide level2">
+<h2>Clustering</h2>
+
+<img data-src="pr_workshop_jan2024_files/figure-revealjs/unnamed-chunk-27-1.png" width="960" class="r-stretch"></section>
+<section id="cell-type-identification" class="slide level2">
+<h2>Cell type identification</h2>
+</section>
 <section id="references" class="slide level2">
 <h2>References</h2>
+<p>Ji, N., &amp; Van Oudenaarden, A. (2012). Single molecule fluorescent in situ hybridization (smFISH) of C. elegans worms and embryos.</p>
 <div class="footer footer-default">
 
 </div>

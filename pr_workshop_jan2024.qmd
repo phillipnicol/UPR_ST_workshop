@@ -11,6 +11,10 @@ editor: visual
 
 ## How to follow along
 
+```{r}
+require(tidyverse)
+```
+
 ## Review of Spatial transcriptomics (ST) technology
 
 Many of the most popular technologies for ST can be divided into two groups:
@@ -29,22 +33,15 @@ FOOTNOTE REF
 
 ![](Fig/visium_barcode.png){fig-align="center" width="418"}
 
-## Comparison
-
-|                          | Visium (Spot-based)                    | Molecule-based                                   |
-|--------------------------|----------------------------------------|--------------------------------------------------|
-| **Spatial Resolution**   | 10-50?? Cells per spot                 | Sub-cellular                                     |
-| **Number of genes**      | Whole transcriptome (20,000+)          | 100-10,000 (MERFISH)                             |
-| **Detection efficiency** | ?                                      | Extremely high                                   |
-| **Accessibility**        | Commercially available, raw data FASTQ | Raw images can be large and difficult to analyze |
-
-## Molecule-based: Small molecule fluorescence in situ hybridization (smFISH)
+## Molecule-based: Small molecule fluorescence in situ hybridization (smFISH) {.smaller}
 
 -   Colored probes attach to mRNA transcript from a target gene.
 
 -   Quantify expression by imaging
 
 -   Key challenge is extending to many genes
+
+![Source: Figure 4A of Ni and Oudenaarden](Fig/smFISH_example.png){fig-align="center" width="248" height="215"}
 
 ## Molecule-based: Multiplexed error robust FISH (MERFISH)
 
@@ -54,25 +51,30 @@ Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be
 
 ![Source: Fig 1A of Chen et al. (2015). *Science*.](Fig/merfish.png){fig-align="center" width="528"}
 
-## Strengths and Limitations of Molecule-based approaches
+## Comparison
 
--   Sub-cellular resolution
-
--   High detection efficiency
-
--   Not truly transcriptome-wide
-
--   Raw image files are large and can be more difficult to analyze
+::: {style="font-size: 80%;"}
+|                          | Visium (Spot-based)                                            | Molecule-based                                                         |
+|-------------------|------------------------|-----------------------------|
+| **Spatial Resolution**   | [1-10 cells per spot]{style="color:red;"}                      | [sub-cellular]{style="color:green;"}                                   |
+| **Number of genes**      | [Whole transcriptome (20,000+)]{style="color:green;"}          | [100-10,000 (MERFISH)]{style="color:red;"}                             |
+| **Detection efficiency** | [\~15%]{style="color:red;"}                                    | [\~95%]{style="color:green;"}                                          |
+| **Accessibility**        | [Commercially available; raw data FASTQ]{style="color:green;"} | [Raw images can be large and difficult to analyze]{style="color:red;"} |
+:::
 
 ## Most ST studies choose Visium
 
+![Moses and Pachter (2022). Nature Methods.](Fig/institutions.png){fig-align="center" width="326"}
+
 ## Most ST studies choose R
+
+![Moses and Pachter (2022). Nature Methods.](Fig/programming_language.png){fig-align="center"}
 
 # Spatial Transcriptomics Data Processing
 
 ## Upstream data processing
 
-INSERT PACHTER FIG
+![Moses and Pachter (2022). Nature Methods.](Fig/upstream.png){fig-align="center"}
 
 ## Visium data format
 
@@ -135,7 +137,7 @@ tar xf V1_Human_Brain_Section_1_raw_feature_bc_matrix.tar.gz
 tar xf V1_Human_Brain_Section_1_spatial.tar.gz
 ```
 
-## Creating the object
+## Exercise: Creating the object
 
 ```{r, echo=TRUE, eval=FALSE}
 dir <- "./cortex"
@@ -188,7 +190,7 @@ spe <- readRDS("./cortex/spe.RDS")
 
 ```{r}
 spi <- getImg(spe)
-par(bg = 'grey', mar=c(0,0,0,0))
+par(bg = 'black', mar=c(0,0,0,0))
 plot(as.raster(spi))
 ```
 
@@ -207,6 +209,7 @@ plot(as.raster(spi))
 
 ```{r}
 require(ggplot2)
+in_tissue <- spe$in_tissue 
 spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 
 df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2])
@@ -219,12 +222,16 @@ p
 
 ```{r, echo=TRUE, eval=FALSE}
 require(ggplot2)
-spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 
-df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2])
-p <- ggplot(df,aes(x=x,y=y)) + geom_point(size=0.05)
-p <- p + theme_bw()
+df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
+                 in_tissue=as.character(spe$in_tissue))
+p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
+  geom_point(size=0.25)+
+  scale_color_manual(values=c("grey", "red"))+
+  theme_bw()
 p
+
+spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 ```
 :::
 
@@ -243,7 +250,9 @@ spe2 <- STexampleData::ST_mouseOB()
 
 ## What is a spatially variable gene (SVG)?
 
-A spatially variable gene (SVG) is a gene whose expression differs significantly from a uniform distribution. Here are some examples of SVGs that were reported by REF in the human brain:
+A spatially variable gene is one whose expression depends on spatial location
+
+![Source: REF](Fig/SVG_example.png){fig-align="center" width="718" height="202"}
 
 ```{r, eval=FALSE}
 library(biomaRt)
@@ -277,27 +286,9 @@ saveRDS(df, file="./analysis/svgplot_df.RDS")
 saveRDS(spe, file=file.path("./cortex/spe_p2.RDS"))
 ```
 
-```{r}
-df <- readRDS(file="./analysis/svgplot_df.RDS")
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,3,6))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + theme(strip.text = element_text(face = "italic"), 
-        panel.grid = element_blank(), 
-        axis.title = element_blank(), 
-        axis.text = element_blank(), 
-        axis.ticks = element_blank())
-p
-```
+## Exercise: Plotting spatially variable genes
 
-## Exercise: Plot the genes from the previous figure
-
-We are going to try to recreate the figure from the previous slide using the dataset that we downloaded earlier.
+In the human cerebral cortex, the genes *MOBP, NPY, SNAP25,* and *PCP4* were previously reported by REF to be spatially variable. We will verify this by plotting.
 
 **Problem:** Instead of gene symbols we are given ENSEMBL ID:
 
@@ -305,7 +296,7 @@ We are going to try to recreate the figure from the previous slide using the dat
 head(rownames(spe))
 ```
 
-## Exercise
+## Exercise: Plotting SVGs
 
 ::: panel-tabset
 ## Step 1
@@ -357,6 +348,7 @@ p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
 p <- p + facet_wrap(~variable, nrow=2)
 p <- p + theme_bw()
 p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + labs(color="log count")
 p <- p + theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
@@ -377,6 +369,7 @@ p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
 p <- p + facet_wrap(~variable, nrow=2)
 p <- p + theme_bw()
 p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + labs(color="log count")
 p <- p + theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
@@ -388,12 +381,27 @@ p
 
 ## Finding SVGs automatically
 
+-   A statistical method can automatically identify spatially variable genes without relying on previous knowledge.
+
+-   There are several existing methods, but it is still an area of active research.
+
+## SPARK-X 
+
+METHOD OVERVIEW
+
+```{r, echo=TRUE, eval=FALSE}
+install.packages('devtools') #If not already installed
+devtools::install_github('xzhoulab/SPARK')
+```
+
 ```{r}
 spe <- readRDS("./cortex/spe_p2.RDS")
 ```
 
-```{r, echo=TRUE}
-library(SPARK)
+## Running SPARK-X
+
+```{r, echo=TRUE, output=FALSE}
+require(SPARK)
 
 ## Remove mitochondrial genes
 mito.genes <- which(grepl("^MT-",rownames(spe)))
@@ -402,18 +410,18 @@ spe <- spe[-mito.genes,]
 res <- sparkx(
     count_in = counts(spe)[rowSums(counts(spe)) > 10,], 
     locus_in = spatialCoords(spe), 
-    X_in = NULL, 
-    numCores = 1, 
-    option = "mixture", 
-    verbose = TRUE)
+    verbose = FALSE)
 ```
 
-## Plotting genes with the smallest p-values
+## Genes with the smallest p-values
+
+::: panel-tabset
+## Plot
 
 ```{r}
+require(scran)
 interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval)[1:10]]
 
-require(scran)
 spe <- logNormCounts(spe)
 
 Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
@@ -436,6 +444,82 @@ p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
 p <- p + facet_wrap(~variable, nrow=2)
 p <- p + theme_bw()
 p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + labs(color="log count")
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+p
+```
+
+## Code
+
+```{r, eval=FALSE, echo=TRUE}
+require(scran)
+interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval)[1:10]]
+
+spe <- logNormCounts(spe)
+
+Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
+
+## Switch rows and columns and make dataframe 
+df <- as.data.frame(t(Y.sub))
+
+## Add spatial coordinates 
+df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
+
+### Construct plot
+require(reshape2)
+df <- melt(df, id.vars=c("x","y"))
+
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,4,8))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + labs(color="log count")
+p <- p + theme(strip.text = element_text(face = "italic"), 
+        panel.grid = element_blank(), 
+        axis.title = element_blank(), 
+        axis.text = element_blank(), 
+        axis.ticks = element_blank())
+p
+```
+:::
+
+## Plotting genes with the largest p-values (least spatially variable)
+
+```{r}
+require(scran)
+interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval,decreasing=TRUE)[1:10]]
+
+spe <- logNormCounts(spe)
+
+Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
+
+## Switch rows and columns and make dataframe 
+df <- as.data.frame(t(Y.sub))
+
+## Add spatial coordinates 
+df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
+
+### Construct plot
+require(reshape2)
+df <- melt(df, id.vars=c("x","y"))
+
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
+p <- p + geom_point(size=0.05) 
+p <- p + coord_fixed()
+p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
+                              breaks=c(0,4,8))
+p <- p + facet_wrap(~variable, nrow=2)
+p <- p + theme_bw()
+p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
+p <- p + labs(color="log count")
 p <- p + theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
@@ -446,4 +530,63 @@ p
 
 # Clustering and cell type identification
 
+## Dimension reduction
+
+## Running PCA
+
+```{r}
+# Get the top 2000 genes.
+top.hvgs <- getTopHVGs(spe, n=2000)
+
+spe <- fixedPCA(spe, subset.row=top.hvgs)
+```
+
+## Plotting top 3 PCs 
+
+```{r}
+component <- 1
+
+df <- data.frame(x=spatialCoords(spe)[,1],
+                 y=spatialCoords(spe)[,2],
+                 PC1=reducedDim(spe)[,1],
+                 PC2=reducedDim(spe)[,2],
+                 PC3=reducedDim(spe)[,3])
+
+df <- df |> pivot_longer(cols=c(PC1,PC2,PC3))
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) + 
+  geom_point(size=0.5) + 
+  coord_fixed()+
+  scale_color_gradient2(low="blue",mid="grey", high="red") +
+  theme_bw()+
+  facet_wrap(~name,nrow=1)
+p
+```
+
+## Clustering
+
+```{r}
+require(igraph)
+g <- buildSNNGraph(spe, use.dimred="PCA")
+cluster <- igraph::cluster_walktrap(g)$membership
+```
+
+```{r}
+df <- data.frame(x=spatialCoords(spe)[,1],
+                 y=spatialCoords(spe)[,2],
+                 cluster=as.character(cluster))
+p <- ggplot(data=df,aes(x=x,y=y,color=cluster)) + 
+  geom_point() + 
+  theme_bw()
+p
+```
+
+## Cell type identification
+
+```{r}
+colLabels(spe) <- factor(cluster)
+markers <- scoreMarkers(spe)
+```
+
 ## References
+
+Ji, N., & Van Oudenaarden, A. (2012). Single molecule fluorescent in situ hybridization (smFISH) of C. elegans worms and embryos.
