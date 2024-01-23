@@ -2,6 +2,7 @@
 title: "Workshop on Analyzing Spatial Transcriptomics Data"
 author: "Phillip Nicol and Rafael Irizarry"
 format: revealjs
+embed-resources: true
 editor: visual
 ---
 
@@ -10,6 +11,8 @@ editor: visual
 ## Outline
 
 ## How to follow along
+
+TODO: Will Provide GitHub Link to Download QMD and HTML. HOW TO INSTALL PACKAGES?
 
 ```{r}
 require(tidyverse)
@@ -55,7 +58,7 @@ Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be
 
 ::: {style="font-size: 80%;"}
 |                          | Visium (Spot-based)                                            | Molecule-based                                                         |
-|-------------------|------------------------|-----------------------------|
+|--------------------------|----------------------------------------------------------------|------------------------------------------------------------------------|
 | **Spatial Resolution**   | [1-10 cells per spot]{style="color:red;"}                      | [sub-cellular]{style="color:green;"}                                   |
 | **Number of genes**      | [Whole transcriptome (20,000+)]{style="color:green;"}          | [100-10,000 (MERFISH)]{style="color:red;"}                             |
 | **Detection efficiency** | [\~15%]{style="color:red;"}                                    | [\~95%]{style="color:green;"}                                          |
@@ -209,13 +212,16 @@ plot(as.raster(spi))
 
 ```{r}
 require(ggplot2)
-in_tissue <- spe$in_tissue 
-spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 
-df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2])
-p <- ggplot(df,aes(x=x,y=y)) + geom_point(size=0.05)
-p <- p + theme_bw()
+df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
+                 in_tissue=as.character(spe$in_tissue))
+p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
+  geom_point(size=0.25)+
+  scale_color_manual(values=c("grey", "red"))+
+  theme_bw()
 p
+
+spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 ```
 
 ## Code
@@ -385,7 +391,7 @@ p
 
 -   There are several existing methods, but it is still an area of active research.
 
-## SPARK-X 
+## SPARK-X
 
 METHOD OVERVIEW
 
@@ -528,24 +534,57 @@ p <- p + theme(strip.text = element_text(face = "italic"),
 p
 ```
 
-# Clustering and cell type identification
+# Dimension Reduction and Clustering
 
-## Dimension reduction
+## Dimension Reduction
+
+Our dataset has over $30,000$ genes. However, many appear to be highly correlated (see the top SVG plot we made earlier).
+
+If we account for the strong correlation, we may be able to summarize the data using a much smaller number of genes, thus reducing the "dimension".
+
+## Principal Component Analysis (PCA)
+
+Informally, PCA begins by finding the line that best approximates the data (PC dimension 1). Next, it finds a line **perpendicular to PC dimension 1** that best approximates the data (PC dimension 2). Then repeat to find PC dimension 3, 4, etc.
+
+![[Image source](https://medium.com/@raghavan99o/principal-component-analysis-pca-explained-and-implemented-eeab7cb73b72)](Fig/pca_example.png){fig-align="center" width="373"}
+
+## Principal Component Analysis (PCA)
+
+To reduce the data to dimension $k$, we can project each data point onto the linear space spanned by the first $k$ PC dimensions.
+
+For example, when $k = 1$ we project each point onto a line. When $k = 2$, we project each point onto a plane.
 
 ## Running PCA
 
-```{r}
-# Get the top 2000 genes.
-top.hvgs <- getTopHVGs(spe, n=2000)
+For computational speed, it is standard practice to subset to the \~2000 most highly variable genes before running PCA:
 
-spe <- fixedPCA(spe, subset.row=top.hvgs)
+```{r, echo=TRUE}
+top.hvgs <- getTopHVGs(spe, n=2000) #Get the top 2000 genes
+spe <- fixedPCA(spe, subset.row=top.hvgs) #Running PCA 
 ```
 
-## Plotting top 3 PCs 
+## Finding the genes in PC dimension 1
+
+What do you notice about the genes that contribute to PC dimension 1?
+
+```{r, echo=TRUE}
+pc_dims <- attr(reducedDim(spe), "rotation")
+
+pc_dim1 <- pc_dims[,1]
+
+#Top 5 genes with positive weight
+names(pc_dim1)[order(pc_dim1, decreasing=TRUE)[1:5]]
+
+#Top 5 genes with negative weight
+names(pc_dim1)[order(pc_dim1)[1:5]]
+```
+
+## Projecting onto the first 3 PC dimensions
+
+::: panel-tabset
+## Plot
 
 ```{r}
-component <- 1
-
 df <- data.frame(x=spatialCoords(spe)[,1],
                  y=spatialCoords(spe)[,2],
                  PC1=reducedDim(spe)[,1],
@@ -562,15 +601,58 @@ p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
 p
 ```
 
+## Code
+
+```{r, echo=TRUE, eval=FALSE}
+df <- data.frame(x=spatialCoords(spe)[,1],
+                 y=spatialCoords(spe)[,2],
+                 PC1=reducedDim(spe)[,1],
+                 PC2=reducedDim(spe)[,2],
+                 PC3=reducedDim(spe)[,3])
+
+df <- df |> pivot_longer(cols=c(PC1,PC2,PC3))
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) + 
+  geom_point(size=0.5) + 
+  coord_fixed()+
+  scale_color_gradient2(low="blue",mid="grey", high="red") +
+  theme_bw()+
+  facet_wrap(~name,nrow=1)
+p
+```
+:::
+
 ## Clustering
 
-```{r}
+The PCA results show that there are groups of spots that have very similar expression levels. By applying a clustering algorithm we can explicitly define these groups of cells. Many approaches for clustering first build the shared nearest neighbor (SNN) graph of the cells.
+
+INSERT FIG
+
+## Building the SNN graph and applying a community detection algorithm
+
+```{r, echo=TRUE}
 require(igraph)
 g <- buildSNNGraph(spe, use.dimred="PCA")
 cluster <- igraph::cluster_walktrap(g)$membership
 ```
 
+## Plotting the clusters
+
+::: panel-tabset
+## Plot
+
 ```{r}
+df <- data.frame(x=spatialCoords(spe)[,1],
+                 y=spatialCoords(spe)[,2],
+                 cluster=as.character(cluster))
+p <- ggplot(data=df,aes(x=x,y=y,color=cluster)) + 
+  geom_point(size=2) + 
+  theme_bw()
+p
+```
+
+## Code
+
+```{r, eval=FALSE, echo=TRUE}
 df <- data.frame(x=spatialCoords(spe)[,1],
                  y=spatialCoords(spe)[,2],
                  cluster=as.character(cluster))
@@ -579,13 +661,33 @@ p <- ggplot(data=df,aes(x=x,y=y,color=cluster)) +
   theme_bw()
 p
 ```
+:::
 
-## Cell type identification
+## Finding marker genes
 
-```{r}
+A marker gene is one that is differentially expressed in a particular cluster. Marker genes are used to better understand the biological function of the identified clusters.
+
+```{r, echo=TRUE}
 colLabels(spe) <- factor(cluster)
 markers <- scoreMarkers(spe)
 ```
+
+## Printing the top 5 markers in each cluster
+
+```{r, echo=TRUE}
+for(i in 1:length(markers)) {
+  print(paste("Cluster", i))
+  print(rownames(markers[[i]])[order(markers[[i]]$mean.AUC, decreasing=TRUE)[1:5]])
+}
+```
+
+## Top marker genes
+
+Per REF,
+
+-   *MOBP* is a white matter/oligodendrocyte marker (Cluster 4)
+
+-   *SNAP25* is a gray matter/neuron marker (Cluster 2)
 
 ## References
 
