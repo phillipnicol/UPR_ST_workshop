@@ -12,10 +12,14 @@ editor: visual
 
 ## How to follow along
 
-TODO: Will Provide GitHub Link to Download QMD and HTML. HOW TO INSTALL PACKAGES?
+TODO: Will Provide GitHub Link to Download QMD and HTML.
 
-```{r}
-require(tidyverse)
+## Installing and loading required packages
+
+Running the following script will install and load all of the necessary packages.
+
+```{r, echo=TRUE}
+source("install_packages.R")
 ```
 
 ## Review of Spatial transcriptomics (ST) technology
@@ -58,7 +62,7 @@ Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be
 
 ::: {style="font-size: 80%;"}
 |                          | Visium (Spot-based)                                            | Molecule-based                                                         |
-|--------------------------|----------------------------------------------------------------|------------------------------------------------------------------------|
+|----------------|--------------------------|------------------------------|
 | **Spatial Resolution**   | [1-10 cells per spot]{style="color:red;"}                      | [sub-cellular]{style="color:green;"}                                   |
 | **Number of genes**      | [Whole transcriptome (20,000+)]{style="color:green;"}          | [100-10,000 (MERFISH)]{style="color:red;"}                             |
 | **Detection efficiency** | [\~15%]{style="color:red;"}                                    | [\~95%]{style="color:green;"}                                          |
@@ -97,24 +101,6 @@ The `SpatialExperiment` package provides a container to store the count and coor
 
 # Creating a SpatialExperiment object
 
-## Installing and loading the SpatialExperiment package
-
-Install the package:
-
-```{r, eval=FALSE, echo=TRUE}
-
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("SpatialExperiment")
-```
-
-Load the package:
-
-```{r, echo=TRUE}
-library(SpatialExperiment)
-```
-
 ## 10X genomics Visium data
 
 The [10X genomics website](https://www.10xgenomics.com) has example ST datasets.
@@ -148,7 +134,7 @@ dir <- "./cortex"
 ### Step 1: Load the count matrix
 require(DropletUtils)
 fnm <- file.path(dir, "raw_feature_bc_matrix")
-sce <- DropletUtils::read10xCounts(fnm)
+sce <- read10xCounts(fnm)
 
 ### Step 2: Load the tissue image
 img <- readImgData(
@@ -165,9 +151,7 @@ ix <- match(sce$Barcode, xy$barcode) #Get cells in correct order
 xy <- xy[ix,]
 
 ### Step 4: Construct feature metadata 
-require(S4Vectors)
-rd <- S4Vectors::DataFrame(
-    symbol = rowData(sce)$Symbol)
+rd <- DataFrame(symbol = rowData(sce)$Symbol)
 
 ### Step 5: Create the object
 spe <- SpatialExperiment(
@@ -211,8 +195,6 @@ plot(as.raster(spi))
 ## Plot
 
 ```{r}
-require(ggplot2)
-
 df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
                  in_tissue=as.character(spe$in_tissue))
 p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
@@ -227,8 +209,6 @@ spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 ## Code
 
 ```{r, echo=TRUE, eval=FALSE}
-require(ggplot2)
-
 df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
                  in_tissue=as.character(spe$in_tissue))
 p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
@@ -246,8 +226,6 @@ spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 For additional examples of data in the `SpatialExperiment` format, a good package is `STexampleData` :
 
 ```{r, echo=TRUE, eval=FALSE}
-BiocManager::install("STexampleData")
-
 ### Example dataset 
 spe2 <- STexampleData::ST_mouseOB()
 ```
@@ -261,7 +239,6 @@ A spatially variable gene is one whose expression depends on spatial location
 ![Source: REF](Fig/SVG_example.png){fig-align="center" width="718" height="202"}
 
 ```{r, eval=FALSE}
-library(biomaRt)
 mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
 genes <- rownames(spe)
 G_list <- getBM(filters="ensembl_gene_id",
@@ -275,7 +252,6 @@ rownames(spe)[ix] <- G_list$hgnc_symbol
 interesting_genes <- which(rownames(spe) %in% c("MOBP","PCP4", "SNAP25","NPY"))
 
 
-library(scran)
 spe <- logNormCounts(spe)
 
 Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
@@ -286,7 +262,6 @@ df <- as.data.frame(t(Y.sub))
 ## Add spatial coordinates 
 df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 
-library(reshape2)
 df <- melt(df, id.vars=c("x","y"))
 saveRDS(df, file="./analysis/svgplot_df.RDS")
 saveRDS(spe, file=file.path("./cortex/spe_p2.RDS"))
@@ -309,7 +284,6 @@ head(rownames(spe))
 
 ```{r, echo=TRUE, eval=FALSE}
 ### Convert ENSEMBL ID to gene symbol
-require(biomaRt)
 mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
 genes <- rownames(spe)
 G_list <- getBM(filters="ensembl_gene_id",
@@ -327,7 +301,6 @@ interesting_genes <- which(rownames(spe) %in% c("MOBP","PCP4", "SNAP25","NPY"))
 
 ```{r, echo=TRUE, eval=FALSE}
 ### Normalize count matrix and subset to interesting genes
-require(scran)
 spe <- logNormCounts(spe)
 
 Y.sub <- as.matrix(logcounts(spe)[interesting_genes,])
@@ -343,7 +316,6 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 
 ```{r, echo=TRUE, eval=FALSE}
 ### Construct plot
-require(reshape2)
 df <- melt(df, id.vars=c("x","y"))
 
 p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
@@ -395,11 +367,6 @@ p
 
 METHOD OVERVIEW
 
-```{r, echo=TRUE, eval=FALSE}
-install.packages('devtools') #If not already installed
-devtools::install_github('xzhoulab/SPARK')
-```
-
 ```{r}
 spe <- readRDS("./cortex/spe_p2.RDS")
 ```
@@ -407,8 +374,6 @@ spe <- readRDS("./cortex/spe_p2.RDS")
 ## Running SPARK-X
 
 ```{r, echo=TRUE, output=FALSE}
-require(SPARK)
-
 ## Remove mitochondrial genes
 mito.genes <- which(grepl("^MT-",rownames(spe)))
 spe <- spe[-mito.genes,]
@@ -425,7 +390,6 @@ res <- sparkx(
 ## Plot
 
 ```{r}
-require(scran)
 interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval)[1:10]]
 
 spe <- logNormCounts(spe)
@@ -439,7 +403,6 @@ df <- as.data.frame(t(Y.sub))
 df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 
 ### Construct plot
-require(reshape2)
 df <- melt(df, id.vars=c("x","y"))
 
 p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
@@ -462,7 +425,6 @@ p
 ## Code
 
 ```{r, eval=FALSE, echo=TRUE}
-require(scran)
 interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval)[1:10]]
 
 spe <- logNormCounts(spe)
@@ -476,7 +438,6 @@ df <- as.data.frame(t(Y.sub))
 df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 
 ### Construct plot
-require(reshape2)
 df <- melt(df, id.vars=c("x","y"))
 
 p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
@@ -500,7 +461,6 @@ p
 ## Plotting genes with the largest p-values (least spatially variable)
 
 ```{r}
-require(scran)
 interesting_genes <- rownames(res$res_mtest)[order(res$res_mtest$combinedPval,decreasing=TRUE)[1:10]]
 
 spe <- logNormCounts(spe)
@@ -514,7 +474,6 @@ df <- as.data.frame(t(Y.sub))
 df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 
 ### Construct plot
-require(reshape2)
 df <- melt(df, id.vars=c("x","y"))
 
 p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
@@ -630,7 +589,6 @@ INSERT FIG
 ## Building the SNN graph and applying a community detection algorithm
 
 ```{r, echo=TRUE}
-require(igraph)
 g <- buildSNNGraph(spe, use.dimred="PCA")
 cluster <- igraph::cluster_walktrap(g)$membership
 ```
@@ -688,6 +646,19 @@ Per REF,
 -   *MOBP* is a white matter/oligodendrocyte marker (Cluster 4)
 
 -   *SNAP25* is a gray matter/neuron marker (Cluster 2)
+
+## Exercise
+
+Repeat the analysis of finding SVGs and clusters for the data (of your choice) in the `STexampleData` package
+
+```{r, eval=FALSE, echo=TRUE}
+## Possible options 
+spe <- STexampleData::seqFISH_mouseEmbryo()
+spe <- STexampleData::SlideSeqV2_mouseHPC()
+spe <- STexampleData::ST_mouseOB()
+spe <- STexampleData::Visium_humanDLPFC()
+spe <- STexampleData::Visium_mouseCoronal()
+```
 
 ## References
 
