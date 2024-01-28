@@ -1,4 +1,5 @@
-if (!require("pacman")) install.packages("pacman")
+if (!require("pacman")) install.packages("pacman",
+                                         repos = "http://cran.us.r-project.org")
 
 pacman::p_load(tidyverse,
                devtools,

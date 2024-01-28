@@ -12,7 +12,13 @@ editor: visual
 
 ## How to follow along
 
-TODO: Will Provide GitHub Link to Download QMD and HTML.
+Downloading the GitHub repository from the command line:
+
+```{zsh, eval=FALSE, echo=TRUE}
+git clone https://github.com/phillipnicol/UPR_ST_workshop_2024.git
+```
+
+Or navigate to the [GitHub repository](https://github.com/phillipnicol/UPR_ST_workshop_2024) and download the ZIP.
 
 ## Installing and loading required packages
 
