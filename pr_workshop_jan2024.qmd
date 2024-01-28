@@ -509,9 +509,9 @@ If we account for the strong correlation, we may be able to summarize the data u
 
 ## Principal Component Analysis (PCA)
 
-Informally, PCA begins by finding the line that best approximates the data (PC dimension 1). Next, it finds a line **perpendicular to PC dimension 1** that best approximates the data (PC dimension 2). Then repeat to find PC dimension 3, 4, etc.
+PCA begins by finding the line that best approximates the data (PC dimension 1). Next, it finds a line **perpendicular to PC dimension 1** that best approximates the data (PC dimension 2). Then repeat to find PC dimension 3, 4, etc.
 
-![[Image source](https://medium.com/@raghavan99o/principal-component-analysis-pca-explained-and-implemented-eeab7cb73b72)](Fig/pca_example.png){fig-align="center" width="373"}
+![[Image source](https://medium.com/@raghavan99o/principal-component-analysis-pca-explained-and-implemented-eeab7cb73b72)](Fig/pca_example.png){fig-align="center" width="387"}
 
 ## Principal Component Analysis (PCA)
 
