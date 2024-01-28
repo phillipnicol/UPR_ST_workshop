@@ -62,7 +62,7 @@ Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be
 
 ::: {style="font-size: 80%;"}
 |                          | Visium (Spot-based)                                            | Molecule-based                                                         |
-|----------------|--------------------------|------------------------------|
+|------------------|-------------------------|-----------------------------|
 | **Spatial Resolution**   | [1-10 cells per spot]{style="color:red;"}                      | [sub-cellular]{style="color:green;"}                                   |
 | **Number of genes**      | [Whole transcriptome (20,000+)]{style="color:green;"}          | [100-10,000 (MERFISH)]{style="color:red;"}                             |
 | **Detection efficiency** | [\~15%]{style="color:red;"}                                    | [\~95%]{style="color:green;"}                                          |
