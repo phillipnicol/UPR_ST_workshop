@@ -1,5 +1,5 @@
 ---
-title: "Workshop on Analyzing Spatial Transcriptomics Data"
+title: "Spatial transcriptomics data analysis using R"
 author: "Phillip Nicol and Rafael Irizarry"
 format: revealjs
 embed-resources: true
@@ -61,7 +61,7 @@ Many of the most popular technologies for ST can be divided into two groups [@ri
 
 -   Key challenge is extending to many genes
 
-![Source: Figure 4A of Ni and Oudenaarden](Fig/smFISH_example.png){fig-align="center" width="248" height="215"}
+![Figure 4A of @ji2012](Fig/smFISH_example.png){fig-align="center" width="248" height="215"}
 
 ## Molecule-based: Multiplexed error robust FISH (MERFISH)
 
@@ -69,13 +69,13 @@ MERFISH uses (error robust) combinatorial labeling to increase the number of gen
 
 Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be encoded and measured after $N$ sequential rounds of smFISH.
 
-![Source: Fig 1A of Chen et al. (2015). *Science*.](Fig/merfish.png){fig-align="center" width="528"}
+![Fig 1A of @chen2015](Fig/merfish.png){fig-align="center" width="528"}
 
 ## Comparison
 
 ::: {style="font-size: 80%;"}
 |                          | Visium (Spot-based)                                            | Molecule-based                                                         |
-|--------------------------|----------------------------------------------------------------|------------------------------------------------------------------------|
+|------------------|-------------------------|-----------------------------|
 | **Spatial Resolution**   | [1-10 cells per spot]{style="color:red;"}                      | [sub-cellular]{style="color:green;"}                                   |
 | **Number of genes**      | [Whole transcriptome (20,000+)]{style="color:green;"}          | [100-10,000 (MERFISH)]{style="color:red;"}                             |
 | **Detection efficiency** | [\~15%]{style="color:red;"}                                    | [\~95%]{style="color:green;"}                                          |
@@ -94,9 +94,9 @@ Basic idea: assign a $N$-bit binary string to each gene. Then $2^N$ genes can be
 
 ## Upstream data processing
 
-![Figure from [@moses2022a]](Fig/upstream.png){fig-align="center" width="513"}
+![Figure from [@moses2022]](Fig/upstream.png){fig-align="center" width="513"}
 
-## Visium data format
+## Visium data format {.smaller}
 
 Once processed, ST data can be represented using two matrices.
 
@@ -104,7 +104,7 @@ Once processed, ST data can be represented using two matrices.
 
 -   **Coordinate matrix** $X$: For each of $J$ spots record the 2-dimensional spatial coordinate.
 
-FIG
+![](Fig/data_structure.png){fig-align="center" width="606" height="393"}
 
 ## Storing ST data in R
 
@@ -127,7 +127,7 @@ For this workshop, we will download samples from human cerebral cortex:
 The data can be downloaded by navigating to the website or directly from the terminal (Unix):
 
 ```{zsh, echo=TRUE, eval=FALSE}
-mkdir cortex analysis
+mkdir cortex
 cd cortex 
 
 curl -O https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Human_Brain_Section_1/V1_Human_Brain_Section_1_raw_feature_bc_matrix.tar.gz
@@ -178,6 +178,8 @@ spe <- SpatialExperiment(
 ### Step 6: Save the object 
 saveRDS(spe, file=file.path(dir,"spe.RDS"))
 ```
+
+Source: [SpatialExperiment Vignette](https://www.bioconductor.org/packages/release/bioc/vignettes/SpatialExperiment/inst/doc/SpatialExperiment.html)
 
 ## Plotting an image of the tissue {background-color="black"}
 
@@ -328,7 +330,8 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 ## Step 3
 
 ```{r, echo=TRUE, eval=FALSE}
-### Construct plot
+### https://github.com/lmweber/nnSVG-analyses
+### For making plots in this style 
 df <- melt(df, id.vars=c("x","y"))
 
 p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
@@ -523,7 +526,7 @@ If we account for the strong correlation, we may be able to summarize the data u
 
 PCA begins by finding the line that best approximates the data (PC dimension 1). Next, it finds a line **perpendicular to PC dimension 1** that best approximates the data (PC dimension 2). Then repeat to find PC dimension 3, 4, etc.
 
-![[Image source](https://medium.com/@raghavan99o/principal-component-analysis-pca-explained-and-implemented-eeab7cb73b72)](Fig/pca_example.png){fig-align="center" width="387"}
+![[Image source](https://medium.com/@raghavan99o/principal-component-analysis-pca-explained-and-implemented-eeab7cb73b72)](Fig/pca_example.png){fig-align="center" width="436"}
 
 ## Principal Component Analysis (PCA)
 
@@ -531,16 +534,17 @@ To reduce the data to dimension $k$, we can project each data point onto the lin
 
 For example, when $k = 1$ we project each point onto a line. When $k = 2$, we project each point onto a plane.
 
-## PCA example on simulated data
+## Simulation: Generating data
 
-First we generate a dataset with two variables that are strongly corrected:
+::: panel-tabset
+## Plot
 
 ```{r}
 set.seed(323)
 data <- data.frame(mvrnorm(n=100, mu=c(0,0), Sigma=matrix(c(1,0.95,0.95,1),nrow=2)))
 data$color <- data[,1]
 p <- ggplot(data,aes(x=X1,y=X2,color=color)) +
-  geom_point() + 
+  geom_point(size=2) + 
   scale_color_gradient(low="lightblue", high="firebrick") + 
   theme_bw() + 
   guides(color="none") + 
@@ -548,9 +552,26 @@ p <- ggplot(data,aes(x=X1,y=X2,color=color)) +
 p
 ```
 
-## PCA example on simulated data
+## Code
 
-Next we apply PCA, and project onto the first PC dimension
+```{r, eval=FALSE, echo=TRUE}
+set.seed(323)
+data <- data.frame(mvrnorm(n=100, mu=c(0,0), Sigma=matrix(c(1,0.95,0.95,1),nrow=2)))
+data$color <- data[,1]
+p <- ggplot(data,aes(x=X1,y=X2,color=color)) +
+  geom_point(size=2) + 
+  scale_color_gradient(low="lightblue", high="firebrick") + 
+  theme_bw() + 
+  guides(color="none") + 
+  xlab("x") + ylab("y")
+p
+```
+:::
+
+## Simulation: Projecting onto PC 1
+
+::: panel-tabset
+## Plot
 
 ```{r}
 pca <- prcomp(data[,c("X1", "X2")])
@@ -567,6 +588,25 @@ p <- ggplot(data=data,aes(x=pc1,y=0,color=color)) +
   xlab("PC1 Score")
 p
 ```
+
+## Code
+
+```{r, eval=FALSE, echo=TRUE}
+pca <- prcomp(data[,c("X1", "X2")])
+
+data$pc1 <- pca$x[,1]
+p <- ggplot(data=data,aes(x=pc1,y=0,color=color)) + 
+  geom_point(size=2) + 
+  scale_color_gradient(low="lightblue", high="firebrick") + 
+  theme_bw() + 
+  theme(axis.title.y=element_blank(),
+           axis.text.y=element_blank(), 
+           axis.ticks.y=element_blank()) + 
+  guides(color="none") + 
+  xlab("PC1 Score")
+p
+```
+:::
 
 ## Applying PCA to ST data
 
@@ -689,10 +729,14 @@ markers <- scoreMarkers(spe)
 ## Printing the top 5 markers in each cluster
 
 ```{r, echo=TRUE}
+top5 <- matrix(NA, nrow=length(markers), ncol=5)
+rownames(top5) <- paste("Cluster", 1:length(markers))
+colnames(top5) <- paste("Marker", 1:5)
 for(i in 1:length(markers)) {
-  print(paste("Cluster", i))
-  print(rownames(markers[[i]])[order(markers[[i]]$mean.AUC, decreasing=TRUE)[1:5]])
+  top5[i,] <- rownames(markers[[i]])[order(markers[[i]]$mean.AUC, decreasing=TRUE)[1:5]]
 }
+top5 <- as.data.frame(top5)
+knitr::kable(top5)
 ```
 
 ## Top marker genes
@@ -717,7 +761,3 @@ spe <- STexampleData::Visium_mouseCoronal()
 ```
 
 ## References
-
-Vignettes of SCRAN, SpatialExperiment
-
-Ji, N., & Van Oudenaarden, A. (2012). Single molecule fluorescent in situ hybridization (smFISH) of C. elegans worms and embryos.
