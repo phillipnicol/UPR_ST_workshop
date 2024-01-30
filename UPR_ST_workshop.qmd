@@ -1,6 +1,6 @@
 ---
 title: "Spatial transcriptomics data analysis using R"
-author: "Phillip Nicol and Rafael Irizarry"
+author: "Phillip Nicol"
 format: revealjs
 embed-resources: true
 editor: visual
@@ -217,7 +217,7 @@ plot(as.raster(spi))
 df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
                  in_tissue=as.character(spe$in_tissue))
 p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
-  geom_point(size=0.25)+
+  geom_point()+
   scale_color_manual(values=c("grey", "red"))+
   theme_bw()
 p
@@ -231,7 +231,7 @@ spe <- spe[,spe$in_tissue == 1] #This is how you subset by spots/samples
 df <- data.frame(x=spatialCoords(spe)[,1], y=spatialCoords(spe)[,2],
                  in_tissue=as.character(spe$in_tissue))
 p <- ggplot(df,aes(x=x,y=y,color=in_tissue))+
-  geom_point(size=0.25)+
+  geom_point()+
   scale_color_manual(values=c("grey", "red"))+
   theme_bw()
 p
@@ -338,20 +338,21 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 ### Author: Lukas Weber
 df <- melt(df, id.vars=c("x","y"))
 
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,3,6))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + labs(color="log count")
-p <- p + theme(strip.text = element_text(face = "italic"), 
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
+  geom_point(size=0.05) + 
+  coord_fixed() +
+  scale_color_gradientn(colors=c("gray90", "blue", "black"),
+                       breaks=c(0,3,6)) + 
+  facet_wrap(~variable, nrow=2) + 
+  theme_bw() + 
+  guides(color=guide_colorbar(ticks=FALSE)) + 
+  labs(color="log count") + 
+  theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
         axis.text = element_blank(), 
         axis.ticks = element_blank())
+p
 ```
 
 ## Final Plot
@@ -359,16 +360,16 @@ p <- p + theme(strip.text = element_text(face = "italic"),
 ```{r, echo=FALSE}
 df <- readRDS(file="./analysis/svgplot_df.RDS")
 
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,3,6))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + labs(color="log count")
-p <- p + theme(strip.text = element_text(face = "italic"), 
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
+  geom_point(size=0.05) + 
+  coord_fixed() +
+  scale_color_gradientn(colors=c("gray90", "blue", "black"),
+                       breaks=c(0,3,6)) + 
+  facet_wrap(~variable, nrow=2) + 
+  theme_bw() + 
+  guides(color=guide_colorbar(ticks=FALSE)) + 
+  labs(color="log count") + 
+  theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
         axis.text = element_blank(), 
@@ -385,10 +386,14 @@ p
 
 ## SPARK-X
 
-METHOD OVERVIEW
+Fast non-parametric test to see if the distribution of gene expression $Y_{i \cdot}$ depends on the spatial locations $X$. More specifically, does the difference in gene expression between cell $i$ and $j$ depend on the spatial distance between cell $i$ and $j$ ? @zhu2021
 
 ```{r}
 spe <- readRDS("./cortex/spe_p2.RDS")
+```
+
+```{r, echo=TRUE, eval=FALSE}
+library(SPARK)
 ```
 
 ## Running SPARK-X
@@ -430,16 +435,16 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 ### Construct plot
 df <- melt(df, id.vars=c("x","y"))
 
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,4,8))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + labs(color="log count")
-p <- p + theme(strip.text = element_text(face = "italic"), 
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
+  geom_point(size=0.05) + 
+  coord_fixed() +
+  scale_color_gradientn(colors=c("gray90", "blue", "black"),
+                       breaks=c(0,4,8)) + 
+  facet_wrap(~variable, nrow=2) + 
+  theme_bw() + 
+  guides(color=guide_colorbar(ticks=FALSE)) + 
+  labs(color="log count") + 
+  theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
         axis.text = element_blank(), 
@@ -465,16 +470,16 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 ### Construct plot
 df <- melt(df, id.vars=c("x","y"))
 
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,4,8))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + labs(color="log count")
-p <- p + theme(strip.text = element_text(face = "italic"), 
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
+  geom_point(size=0.05) + 
+  coord_fixed() +
+  scale_color_gradientn(colors=c("gray90", "blue", "black"),
+                       breaks=c(0,4,8)) + 
+  facet_wrap(~variable, nrow=2) + 
+  theme_bw() + 
+  guides(color=guide_colorbar(ticks=FALSE)) + 
+  labs(color="log count") + 
+  theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
         axis.text = element_blank(), 
@@ -501,16 +506,16 @@ df$x <- spatialCoords(spe)[,1]; df$y <- spatialCoords(spe)[,2]
 ### Construct plot
 df <- melt(df, id.vars=c("x","y"))
 
-p <- ggplot(data=df,aes(x=x,y=y,color=value)) 
-p <- p + geom_point(size=0.05) 
-p <- p + coord_fixed()
-p <- p + scale_color_gradientn(colors=c("gray90","blue","black"),
-                              breaks=c(0,4,8))
-p <- p + facet_wrap(~variable, nrow=2)
-p <- p + theme_bw()
-p <- p + guides(color = guide_colorbar(ticks = FALSE)) 
-p <- p + labs(color="log count")
-p <- p + theme(strip.text = element_text(face = "italic"), 
+p <- ggplot(data=df,aes(x=x,y=y,color=value)) +
+  geom_point(size=0.05) + 
+  coord_fixed() +
+  scale_color_gradientn(colors=c("gray90", "blue", "black"),
+                       breaks=c(0,4,8)) + 
+  facet_wrap(~variable, nrow=2) + 
+  theme_bw() + 
+  guides(color=guide_colorbar(ticks=FALSE)) + 
+  labs(color="log count") + 
+  theme(strip.text = element_text(face = "italic"), 
         panel.grid = element_blank(), 
         axis.title = element_blank(), 
         axis.text = element_blank(), 
@@ -749,9 +754,9 @@ knitr::kable(top5)
 
 Per [@maynard2021],
 
--   *MOBP* is a white matter/oligodendrocyte marker (Cluster 4)
+-   *MOBP* is a white matter/oligodendrocyte marker (Cluster 2)
 
--   *SNAP25* is a gray matter/neuron marker (Cluster 2)
+-   *SNAP25* is a gray matter/neuron marker (Cluster 3)
 
 ## Additional exercises
 
