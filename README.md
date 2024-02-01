@@ -21,4 +21,12 @@ The topics are motivated by an in-depth analysis of a real spatial transcriptomi
 
 ## Getting started 
 
-Clone the repository, then view the presentation 
+Clone the repository, then view the presentation `UPR_ST_workshop.html`. 
+
+## References
+
+The analyses are based on the following online resources:
+
+* [Introduction to the SpatialExperiment class](https://www.bioconductor.org/packages/release/bioc/vignettes/SpatialExperiment/inst/doc/SpatialExperiment.html)
+* [Using scran to analyze single-cell RNA-seq data](https://bioconductor.org/packages/devel/bioc/vignettes/scran/inst/doc/scran.html)
+* [Lukas Weber's BestPracticesST](https://github.com/lmweber/BestPracticesST)
