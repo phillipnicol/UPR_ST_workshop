@@ -12,3 +12,8 @@ This repository contains materials for a workshop on spatial transcriptomics dat
 4.	Dimension reduction, clustering, and identification of marker genes.
 
 The topics are motivated by an in-depth analysis of a real spatial transcriptomics dataset from the human brain. 
+
+## Software prerequesites 
+
+* `R (>= 4.0)`
+* Ability to run Unix commands is preferable but not required
