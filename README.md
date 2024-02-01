@@ -16,4 +16,9 @@ The topics are motivated by an in-depth analysis of a real spatial transcriptomi
 ## Software prerequesites 
 
 * `R (>= 4.0)`
+* Ability to open `.qmd` files. 
 * Ability to run Unix commands is preferable but not required
+
+## Getting started 
+
+Clone the repository, then view the presentation 
